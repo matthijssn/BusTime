@@ -3,6 +3,8 @@ __author__ = 'Matthijs'
 import sys, getopt
 import urllib, json
 
+
+
 class BusTime:
 
     def __init__(self, city, busstop):
@@ -18,11 +20,31 @@ class BusTime:
         response = urllib.urlopen(url);
         data = json.loads(response.read())
 
+        from lxml import etree
 
+        root = etree.Element('schedule')
 
         for item in data['tabs'][0]['departures']:
-            print item['service'] + ' Richting: ' + item['destinationName'] + ', Tijd: ' + item['time'] + ' (' + item['realtimeState'] + ') '
+            busElement = etree.Element('bus', time=item['time'])
+            serviceElement = etree.Element('service')
+            serviceElement.text = item['service']
+            destinationElement = etree.Element('destination')
+            destinationElement.text = item['destinationName']
+            stateElement = etree.Element('state')
+            stateElement.text = item['realtimeText']
+            operatorElement = etree.Element('operator')
+            operatorElement.text = item['operatorName']
+            busElement.append(serviceElement)
+            busElement.append(destinationElement)
+            busElement.append(stateElement)
+            busElement.append(operatorElement)
+            root.append(busElement)
 
+        s = etree.tostring(root, pretty_print=True)
+        print s
+
+        f = open('schedule.xml', 'w')
+        f.write(s)
         print 'Terminated'
 
 
